@@ -7,7 +7,7 @@ Route::middleware('auth.basic.db')->group(function () {
     Route::get('/secure-data', function () {
         return response()->json([
             'message' => 'Zalogowano!',
-            'user' => auth()->user()?->only(['id', 'name', 'email']),
+            'user' => new \App\Http\Resources\UserBasicResource(auth()->user()),
         ]);
     });
     Route::post('/patients/{patient}/documents', [DocumentController::class, 'store']);

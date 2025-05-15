@@ -22,17 +22,24 @@ class UploadPatientDocumentHandler
     }
 
     /**
+     * @param UploadPatientDocumentCommand $command
+     * @return void
      * @throws ValidationException
      */
-    public function __invoke(UploadPatientDocumentCommand $command)
+    public function __invoke(UploadPatientDocumentCommand $command): void
     {
         $this->auth->ensureDoctorHasAccess($command->doctorId, $command->patientId);
-        $this->validator->validate($command->document);
 
-        $path = $this->storage->storeTemporary($command->document);
+        if ($this->validator->validate($command->document)) {
+            $path = $this->storage->storeTemporary($command->document);
 
-        $document = new PatientDocument($path, $command->document->getClientOriginalName(), $command->patientId, $command->doctorId);
+            $document = new PatientDocument($path, $command->document->getClientOriginalName(), $command->patientId, $command->doctorId);
 
-        $this->queue->dispatch(new PatientDocumentUploaded($document));
+            $this->queue->dispatch(new PatientDocumentUploaded($document));
+        } else {
+            throw ValidationException::withMessages(
+                $this->validator->errors()->toArray()
+            );
+        }
     }
 }

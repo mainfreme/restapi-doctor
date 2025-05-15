@@ -4,14 +4,16 @@ namespace App\Application\Service;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\MessageBag;
 
 
 class DocumentValidator
 {
-    public function validate(UploadedFile $file): void
+    protected ?MessageBag $errors = null;
+
+    public function validate(UploadedFile $file): bool
     {
-        $maxSizeMB = (int) env('MAX_DOCUMENT_SIZE_MB', 10);
+        $maxSizeMB = (int) config('filesystems.max_document_size_mb', 5);
         $maxSizeKB = $maxSizeMB * 1024;
 
         $validator = Validator::make(
@@ -21,13 +23,21 @@ class DocumentValidator
                     'required',
                     'file',
                     'mimes:pdf',
-                    'max:{$maxSizeKB}',
+                    'max:'.$maxSizeKB,
                 ],
             ]
         );
 
         if ($validator->fails()) {
-            throw new ValidationException($validator);
+            $this->errors = $validator->errors();
+            return false;
         }
+
+        return true;
+    }
+
+    public function errors(): ?MessageBag
+    {
+        return $this->errors;
     }
 }

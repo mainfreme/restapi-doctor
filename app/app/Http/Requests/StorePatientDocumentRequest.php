@@ -8,10 +8,9 @@ class StorePatientDocumentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $doctor = auth()->user();
         $patient = $this->route('patient');
 
-        return $patient && $doctor && $patient->doctor_id === $doctor->id;
+        return $patient && $this->user()->can('access', $patient);
     }
 
     public function rules(): array
@@ -21,7 +20,7 @@ class StorePatientDocumentRequest extends FormRequest
                 'required',
                 'file',
                 'mimes:pdf',
-                'max:' . config('custom.max_document_size_mb') * 1024,
+                'max:' . config('filesystems.max_document_size_mb', 5) * 1024,
             ],
         ];
     }
