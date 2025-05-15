@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'type',
+        'doctor_id',
     ];
 
     /**
@@ -46,13 +48,32 @@ class User extends Authenticatable
         ];
     }
 
-    public function doctor()
+    /**
+     * Jeśli użytkownik to pacjent — relacja do lekarza.
+     */
+    public function doctor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'doctor_id');
     }
 
-    public function patients()
+    /**
+     * Jeśli użytkownik to lekarz — lista jego pacjentów.
+     */
+    public function patients(): HasMany
     {
         return $this->hasMany(User::class, 'doctor_id');
+    }
+
+    /**
+     * Sprawdzenie roli użytkownika
+     */
+    public function isDoctor(): bool
+    {
+        return $this->type === 'lekarz';
+    }
+
+    public function isPatient(): bool
+    {
+        return $this->type === 'pacjent';
     }
 }
